@@ -1,0 +1,87 @@
+
+-- Create a ScreenGui
+local screenGui = Instance.new("ScreenGui")
+local frame = Instance.new("Frame")
+local infStaminaButton = Instance.new("TextButton")
+
+-- Parent the ScreenGui to CoreGui
+screenGui.Name = "RakOOF_GUI"
+screenGui.Parent = game.CoreGui
+
+-- Frame properties
+frame.Name = "MainFrame"
+frame.Parent = screenGui
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+frame.Size = UDim2.new(0, 200, 0, 100)
+
+-- Infinite Stamina Button properties
+infStaminaButton.Name = "InfStaminaButton"
+infStaminaButton.Parent = frame
+infStaminaButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+infStaminaButton.Size = UDim2.new(0, 180, 0, 50)
+infStaminaButton.Position = UDim2.new(0.5, -90, 0.5, -25)
+infStaminaButton.Text = "Inf Stamina"
+
+-- Infinite Stamina Function
+local function enableInfiniteStamina()
+local player = game.Players.LocalPlayer
+local character = player.Character
+local staminaValue = character:WaitForChild("CharValues"):WaitForChild("StaminaPercentValue")
+
+local mt = getrawmetatable(staminaValue)
+local oldIndex = mt.__index
+setreadonly(mt, false)
+
+mt.__index = newcclosure(function(tbl, idx)
+if tbl == staminaValue and idx == "Value" then
+return 100
+end
+return oldIndex(tbl, idx)
+end)
+end
+
+-- Connect the button to the function
+infStaminaButton.MouseButton1Click:Connect(enableInfiniteStamina)
+
+-- Make frame draggable across all devices
+local UIS = game:GetService("UserInputService")
+local dragToggle = nil
+local dragSpeed = 0.25 -- change this to your desired speed
+local dragStart = nil
+local startPos = nil
+
+local function updateInput(input)
+local delta = input.Position - dragStart
+local goalPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+game:GetService("TweenService"):Create(frame, TweenInfo.new(dragSpeed), {Position = goalPos}):Play()
+end
+
+frame.InputBegan:Connect(function(input)
+
+if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+dragToggle = true
+dragStart = input.Position
+startPos = frame.Position
+input.Changed:Connect(function()
+if input.UserInputState == Enum.UserInputState.End then
+dragToggle = false
+end
+end)
+end
+end)
+
+frame.InputChanged:Connect(function(input)
+if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+updateInput(input)
+end
+end)
+
+UIS.InputChanged:Connect(function(input)
+if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+updateInput(input)
+end
+end)
+
+-- Debugging
+print("RakOOF GUI loaded. Inf Stamina button ready.")
